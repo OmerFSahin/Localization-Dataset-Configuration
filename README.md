@@ -11,6 +11,17 @@ The dataset is not included due to licensing and size considerations.
 
 ## Expected Structure
 
+
+Localization-Dataset-Configuration/
+├─ README.md
+├─ requirements.txt
+├─ src/
+│   └─ build_localization_dataset.py
+└─ data/
+    ├─ input/
+    └─ output/
+
+
 data/input/
   Patient_001/
     Patient_001(scan).nrrd
@@ -21,6 +32,7 @@ Output:
 data/output/Patient_001/
   Patient_001(scan).nrrd
   meta.json
+
 
 ---
 
