@@ -39,12 +39,12 @@ data/output/Patient_001/
 ---
 
 ## Usage
-
+```
 python src/build_localization_dataset.py \
   --input-dir data/input \
   --output-dir data/output \
   --margin 10
-
+```
 ---
 
 ## What It Does
