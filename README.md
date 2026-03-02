@@ -22,17 +22,19 @@ Localization-Dataset-Configuration/
     └─ output/
 ```
 
+Input:
+```
 data/input/
   Patient_001/
     Patient_001(scan).nrrd
     Patient_001(mask).nrrd
-
+```
 Output:
-
+```
 data/output/Patient_001/
   Patient_001(scan).nrrd
   meta.json
-
+```
 
 ---
 
@@ -51,11 +53,11 @@ python src/build_localization_dataset.py \
 - Computes bounding box of non-zero voxels
 - Converts voxel coordinates to millimeter space
 - Saves bbox as:
-
+```
 {
   "bbox_mm": [xmin, ymin, zmin, xmax, ymax, zmax]
 }
-
+```
 - Copies scan file to output folder
 
 ---
@@ -66,12 +68,12 @@ numpy
 pynrrd 
 
 Install:
-
+```
 pip install -r requirements.txt
-
+```
 ## Output Example
 
-
+```
  data/output/pat0/meta.json
 {
     "bbox_mm": [
@@ -84,4 +86,4 @@ pip install -r requirements.txt
     ]
 }
 
-
+```
