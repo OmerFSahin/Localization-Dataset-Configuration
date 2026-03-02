@@ -11,7 +11,7 @@ The dataset is not included due to licensing and size considerations.
 
 ## Expected Structure
 
-
+```
 Localization-Dataset-Configuration/
 ├─ README.md
 ├─ requirements.txt
@@ -20,7 +20,7 @@ Localization-Dataset-Configuration/
 └─ data/
     ├─ input/
     └─ output/
-
+```
 
 data/input/
   Patient_001/
