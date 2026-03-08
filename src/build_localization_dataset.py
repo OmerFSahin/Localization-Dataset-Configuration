@@ -71,10 +71,8 @@ def process_patient(pdir: Path, output_root: Path, margin: int) -> None:
     if not scan or not mask:
         raise FileNotFoundError("Scan or mask missing.")
 
-    mask_data, _ = load_nrrd(mask)
-    _, scan_hdr = load_nrrd(scan)
-
-    bbox = bbox_mm_from_mask(mask_data, scan_hdr, margin)
+    mask_data, mask_hdr = load_nrrd(mask)
+    bbox = bbox_mm_from_mask(mask_data, mask_hdr, margin)
 
     out_dir = output_root / pdir.name
     out_dir.mkdir(parents=True, exist_ok=True)
