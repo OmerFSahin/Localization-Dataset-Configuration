@@ -3,13 +3,10 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
-import gzip
 from pathlib import Path
-from typing import Tuple
 
 import numpy as np
-import nrrd
-
+import SimpleITK as sitk
 
 VALID_EXTS = (".nrrd", ".nhdr", ".gz")
 
@@ -26,36 +23,43 @@ def load_nrrd(path: Path) -> Tuple[np.ndarray, dict]:
             raise IOError(f"{path.name} not valid NRRD: {e_plain} / {e_gzip}")
 
 
-def bbox_mm_from_mask(mask: np.ndarray, header: dict, margin: int) -> list:
-    """Compute bounding box in millimeter space from mask."""
-    if mask.ndim != 3:
-        raise ValueError("Mask must be 3D.")
-
-    nz = np.where(mask > 0)
+def bbox_mm_from_mask_sitk(mask_img: sitk.Image, margin_vox: int = 0) -> list[float]:
+    arr = sitk.GetArrayFromImage(mask_img)  # (Z,Y,X)
+    nz = np.where(arr > 0)
     if nz[0].size == 0:
         raise ValueError("Mask is empty.")
 
-    z0, y0, x0 = [int(c.min()) - margin for c in nz]
-    z1, y1, x1 = [int(c.max()) + margin for c in nz]
+    z0, y0, x0 = [int(c.min()) - margin_vox for c in nz]
+    z1, y1, x1 = [int(c.max()) + margin_vox for c in nz]
 
-    D, H, W = mask.shape
-    x0, x1 = np.clip([x0, x1], 0, W - 1)
-    y0, y1 = np.clip([y0, y1], 0, H - 1)
-    z0, z1 = np.clip([z0, z1], 0, D - 1)
+    Z, Y, X = arr.shape
+    x0, x1 = np.clip([x0, x1], 0, X - 1)
+    y0, y1 = np.clip([y0, y1], 0, Y - 1)
+    z0, z1 = np.clip([z0, z1], 0, Z - 1)
 
-    directions = np.asarray(header["space directions"])
-    origin = np.asarray(header["space origin"])
-
-    p_min = origin + directions.T @ np.array([x0, y0, z0])
-    p_max = origin + directions.T @ np.array([x1, y1, z1])
-
-    bbox = [
-        float(min(p_min[i], p_max[i])) for i in range(3)
-    ] + [
-        float(max(p_min[i], p_max[i])) for i in range(3)
+    corners_idx_xyz = [
+        (x0, y0, z0),
+        (x1, y0, z0),
+        (x0, y1, z0),
+        (x1, y1, z0),
+        (x0, y0, z1),
+        (x1, y0, z1),
+        (x0, y1, z1),
+        (x1, y1, z1),
     ]
 
-    return bbox
+    corners_mm = np.array(
+        [mask_img.TransformIndexToPhysicalPoint(tuple(map(int, p))) for p in corners_idx_xyz],
+        dtype=np.float64,
+    )
+
+    mins = corners_mm.min(axis=0)
+    maxs = corners_mm.max(axis=0)
+
+    return [
+        float(mins[0]), float(mins[1]), float(mins[2]),
+        float(maxs[0]), float(maxs[1]), float(maxs[2]),
+    ]
 
 
 def process_patient(pdir: Path, output_root: Path, margin: int) -> None:
@@ -71,8 +75,8 @@ def process_patient(pdir: Path, output_root: Path, margin: int) -> None:
     if not scan or not mask:
         raise FileNotFoundError("Scan or mask missing.")
 
-    mask_data, mask_hdr = load_nrrd(mask)
-    bbox = bbox_mm_from_mask(mask_data, mask_hdr, margin)
+    mask_img = sitk.ReadImage(str(mask))
+    bbox = bbox_mm_from_mask_sitk(mask_img, margin_vox=margin)
 
     out_dir = output_root / pdir.name
     out_dir.mkdir(parents=True, exist_ok=True)
